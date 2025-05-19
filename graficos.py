@@ -2,13 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+
 # Carregar dados
 df = pd.read_csv('digital_diet_mental_health.csv')
 
 
 # =========================================================================
 # 1. Histograma — Distribuição das horas totais de tela por dia
-#    (abre a apresentação mostrando de que escala estamos falando)
 # =========================================================================
 plt.figure()
 plt.hist(df['daily_screen_time_hours'], bins=20)
@@ -20,7 +20,7 @@ plt.savefig('01_hist_tempo_tela.png')
 plt.close()
 
 # -------------------------------------------------------------------------
-# Preparação comum: categorias de tempo de tela (usaremos em vários gráficos)
+# Preparação comum: categorias de tempo de tela 
 # -------------------------------------------------------------------------
 df['screen_time_cat'] = pd.cut(
     df['daily_screen_time_hours'],
@@ -43,6 +43,7 @@ plt.close()
 # =========================================================================
 # 3. Barra — Como o TEMPO TOTAL de tela se divide por tipo de dispositivo
 # =========================================================================
+
 # Somar horas por tipo e normalizar por participantes para média
 media_dispositivos = {
     'Telefone': df['phone_usage_hours'].mean(),
