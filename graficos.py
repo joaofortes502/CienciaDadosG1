@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import seaborn as sns
+import numpy as np
 # Carregar dados
 df = pd.read_csv('digital_diet_mental_health.csv')
 
@@ -57,41 +58,83 @@ plt.tight_layout()
 plt.savefig('03_bar_dispositivos.png')
 plt.close()
 
+
 # =========================================================================
-# 4. Linha — Duração média de sono vs. faixas de tempo de tela
+# 4. Barra — Tempo Médio de Tela por Finalidade (Trabalho, Lazer, Estudos)
 # =========================================================================
-mean_sleep = df.groupby('screen_time_cat')['sleep_duration_hours'].mean()
+media_purpose = {
+    'Trabalho': df['work_related_hours'].mean(),
+    'Lazer': (df['entertainment_hours'] + df['gaming_hours'] + df['social_media_hours']).mean(),
+    'Estudos': (df['laptop_usage_hours'] - df['work_related_hours']).clip(lower=0).mean()
+}
 plt.figure()
-mean_sleep.plot(marker='o')
-plt.title('Sono Médio por Faixa de Tempo de Tela')
-plt.xlabel('Faixa de Tempo de Tela')
-plt.ylabel('Horas de Sono por Noite')
+plt.bar(media_purpose.keys(), media_purpose.values())
+plt.title('Tempo Médio de Tela por Finalidade')
+plt.ylabel('Horas por dia')
 plt.tight_layout()
-plt.savefig('04_line_sono_tela.png')
+plt.savefig('04_bar_tela_finalidade.png')
+plt.close()
+
+
+# =========================================================================
+# 5. Dispersão com linha de tendência - Tempo de tela vs. Saúde Mental
+# =========================================================================
+plt.figure(figsize=(10,6))
+sns.regplot(
+    data=df,
+    x='daily_screen_time_hours',
+    y='mental_health_score',
+    scatter_kws={'alpha':0.4, 'color':'#4c72b0'},
+    line_kws={'color':'#dd8452', 'lw':2}
+)
+plt.title('Relação entre Tempo de Tela e Saúde Mental')
+plt.xlabel('Horas diárias de tela')
+plt.ylabel('Pontuação de Saúde Mental (0-100)')
+plt.tight_layout()
+plt.savefig('05_dispersao_saude_mental.png')
 plt.close()
 
 # =========================================================================
-# 5. Barra — Stress médio por faixa de tempo de tela
+# 6. Barras Agrupadas - Sono e Atividade Física por Faixa de Tela
 # =========================================================================
-mean_stress = df.groupby('screen_time_cat')['stress_level'].mean()
-plt.figure()
-mean_stress.plot(kind='bar')
-plt.title('Stress Médio por Faixa de Tempo de Tela')
-plt.xlabel('Faixa de Tempo de Tela')
-plt.ylabel('Score Médio de Stress (1‑10)')
-plt.tight_layout()
-plt.savefig('05_bar_stress_tela.png')
-plt.close()
+# Calcular médias agrupadas
+media_sono_atividade = df.groupby('screen_time_cat').agg({
+    'sleep_duration_hours': 'mean',
+    'physical_activity_hours_per_week': 'mean'
+}).reset_index()
 
-# =========================================================================
-# 6. Linha — Score médio de saúde mental por Idade
-# =========================================================================
-mean_mh_age = df.groupby('age')['mental_health_score'].mean().sort_index()
-plt.figure()
-mean_mh_age.plot(marker='o')
-plt.title('Score Médio de Saúde Mental por Idade')
-plt.xlabel('Idade')
-plt.ylabel('Score Médio de Saúde Mental')
+# Configurar o gráfico
+plt.figure(figsize=(12, 6))
+largura_barra = 0.35
+indices = np.arange(len(media_sono_atividade))
+
+# Barras para Sono
+plt.bar(
+    indices - largura_barra/2,
+    media_sono_atividade['sleep_duration_hours'],
+    width=largura_barra,
+    label='Horas de Sono (média diária)',
+    color='#3498db',
+    alpha=0.8
+)
+
+# Barras para Atividade Física
+plt.bar(
+    indices + largura_barra/2,
+    media_sono_atividade['physical_activity_hours_per_week'],
+    width=largura_barra,
+    label='Atividade Física (horas/semana)',
+    color='#27ae60',
+    alpha=0.8
+)
+
+# Customização
+plt.title('Comparação de Sono e Atividade Física por Faixa de Tempo de Tela')
+plt.xlabel('Faixa de Horas Diárias')
+plt.ylabel('Horas')
+plt.xticks(indices, media_sono_atividade['screen_time_cat'])
+plt.legend()
+plt.grid(axis='y', alpha=0.3)
 plt.tight_layout()
-plt.savefig('06_line_saude_idade.png')
+plt.savefig('06_barras_sono_atividade.png')
 plt.close()
